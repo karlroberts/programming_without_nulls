@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!-->  <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	
+	<title>Programming without null</title>
+	
+	<meta name="description" content="A jQuery library for modern HTML presentations">
+	<meta name="author" content="Karl Roberts">
+    <meta name="email" content="karl.roberts@owtelse.com">
+    <meta name="twitter" content="MrK4rl">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+	
+	<!-- Core and extension CSS files -->
+	<link rel="stylesheet" href="../core/deck.core.css">
+	<link rel="stylesheet" href="../extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="../extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="../extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="../extensions/status/deck.status.css">
+	<link rel="stylesheet" href="../extensions/hash/deck.hash.css">
+	
+	<!-- Theme CSS files (menu swaps these out) -->
+	<link rel="stylesheet" id="style-theme-link" href="../themes/style/web-2.0.css">
+	<link rel="stylesheet" id="transition-theme-link" href="../themes/transition/horizontal-slide.css">
+	
+	<!-- Custom CSS just for this page -->
+	<link rel="stylesheet" href="introduction.css">
+	
+	<script src="../modernizr.custom.js"></script>
+</head>
+
+<body class="deck-container">
+
+<!-- div class="theme-menu">
+	<h2>Themes</h2>	
+	
+	<label for="style-themes">Style:</label>
+	<select id="style-themes">
+		<option selected value="../themes/style/web-2.0.css">Web 2.0</option>
+		<option value="../themes/style/swiss.css">Swiss</option>
+		<option value="../themes/style/neon.css">Neon</option>
+		<option value="">None</option>
+	</select>
+	
+	<label for="transition-themes">Transition:</label>
+	<select id="transition-themes">
+		<option selected value="../themes/transition/horizontal-slide.css">Horizontal Slide</option>
+		<option value="../themes/transition/vertical-slide.css">Vertical Slide</option>
+		<option value="../themes/transition/fade.css">Fade</option>
+		<option value="">None</option>
+	</select>
+</div -->
+
+<section class="slide" id="title-slide">
+	<h1>Programming without null</h1>
+
+
+		<p class="vcenter-right-low"><cite>Karl Roberts</cite></p></h3>
+</section>
+
+<section class="slide" id="problem-overview">
+	<h2>Create a Time render Library</h2>
+	<ol>
+		<li class="slide">
+			<h3>Need to configure representation</h3>
+			<p>eg &quot;2w 3d 4h 5s&quot;</p>
+            <p>eg &quot;2weeks 3days 4hours 5secs 300ms&quot;</p>
+		</li>
+		<li class="slide">
+			<h3>Need to configure number of units at a level</h3>
+			<p>eg &quot;8 hours per day, 5 days per week&quot;</p>
+            <p>eg &quot;24 hours per day, 8 days per week&quot;</p>
+		</li>
+		<li class="slide">
+			<h3>Need to Pretty Print, I do not want to show zeros</h3>
+			<p>so rather than  &quot;2w 4d 0h 5m&quot;</p>
+            <p>I want &quot;2w 4d 5m&quot;</p>
+		</li>
+        <li class="slide">
+			<h3>Must be a concise</h3>
+			<p>error free and not pollute the code with tedious null checks!</p>
+		</li>
+	</ol>
+</section>
+
+<section class="slide" id="introOption">
+	<h2>Programming without null?</h2><h3>Do I have an Option?</h3>
+    <p>Maybe... (sic)</p>
+    <p class="slide"><img src="./images/optionDoc.png"/></p>
+    <h3 class="slide">Arggggh! there's the 'M' word</h3>
+</section>
+
+<section class="slide" id="model">
+	<h2>A slight detour ...</h2>
+    <h3>So What is a monad and why do I care?</h3>
+    <p>
+        <ul>
+            <li class="slide">Monad is a term from catagory theory, but let's not get too carried away</li>
+            <li class="slide">Monads are simple but tricky to understand initially because it's a "pattern"</li>
+            <li class="slide">Monads contain functions with particular type signatures that relate in a way that preserves the monadic laws/axioms</li>
+            <li class="slide">They are everywhere, once you spot them they make some programming tasks easier and less verbose</li>
+            <li class="slide">In Scala by defining 'flatMap','map','filter' and 'forEach' on your Types, while obeying the axioms, you can use your type in a For comprehension, which makes using the type easy.</li>
+            <li class="slide">Enough of this lets see an example</li>
+            <li class="slide"><img src="./images/optionDoc.png"/></li>
+        </ul>
+    </p>
+</section>
+
+<section class="slide">
+<p>Certainly looks useful for getting rid of nulls, I have Some(time) or None, and if I need to chain then I don't need to check for null or None</p>
+<p>Looks like magic, but I like to understand stuff, so here's a simple explanation, shamelessly borrowed from Daniel Spiewak's "Monad's are not a Metaphore"</p>
+<p>The significant point is that monads combine one thing together with another in sequence. In fact, this is what all monads do. You start out with Thing One, and you have a function which will (given One) will give you Thing Two. Let’s look at some more code:
+<pre><code>case class Thing[+A](value: A)
+val a = Thing(1)
+val b = Thing(2)</code></pre>
+Simply lets us wrap somthing up in side a Thing.</p>
+
+<p>Imagine that we find ourselves writing a lot of code which looks like this:
+
+<pre><code>def foo(i: Int) = Thing(i + 1)
+
+val a = Thing(1)
+val b = foo(a.value)        // => Thing(2)</code></pre>
+We’re starting with a Thing, and then we’re using the value inside of that Thing to call a function which gives us a new Thing, a very common pattern. We have a value, and then we use that value to compute a new value.</p>
+
+<p>Here’s the question: can we come up with a nicer way of going from a to b? Basically, we want to encapsulate this pattern as a more general tool.
+<br/>
+What we want is a function which pulls the value out of Thing and then calls another function with that value, returning the result of that function call (which will be a new Thing). Since we’re good object-oriented programmers, we will define this as a method on class Thing:
+
+
+<pre><code>case class Thing[+A](value: A) {
+  def bind[B](f: A => Thing[B]) = f(value)
+}</code></pre>
+So if we have a Thing, we can pull its value out and use it to compute a new Thing, all in one convenient step: Thing is a monad.
+
+<pre><code>def foo(i: Int) = Thing(i + 1)
+
+val a = Thing(1)
+val b = a bind foo          // => Thing(2)</code></pre>
+</p>
+</section>
+
+<section class="slide">
+<h3>The Monad Pattern</h3>
+Any time you start with something which you pull apart and use to compute a new something of that same type, you have a monad. It’s really as simple as that.<br/>
+    Monads are everywhere. And by “everywhere”, I do mean everywhere.
+
+<p>To understand why this is, let’s look at what it is that makes Thing a monad:
+
+<pre><code>val a = Thing(1)</code></pre>
+The first thing is that I can wrap up a value inside of a new Thing. Object-oriented developers might call this a “constructor”. Mathematicians call it “the unit function”. <br/>
+    We have a function of type A => Thing; a function which takes some value and wraps it up inside a new Thing.
+</p>
+    <p>
+<pre><code>a bind { i => Thing(i + 1) }</code></pre>
+We also have this bind function, which digs inside our Thing and allows a function which we supply to use that value to create a new Thing.</p>
+    <p>This is the heart of the Monad.</p>
+   <p> Scala calls this function “flatMap“. Haskell calls it “>>=“.</p>
+   <p> What’s interesting here is the fact that bind/flatMap is how you combine two things together <strong>in sequence</strong>.
+    We start with one thing and use its value to compute a new thing. </p>
+
+<h3 class="slide">It’s as simple as that!</h3>
+</section>
+<section class="slide">
+
+<h3>The Option Example</h3>
+
+<p>Option - one of the easiest to understand and definitely easiest to see where I can use it. Consider the following:</p>
+
+<pre><code>def firstName(id: Int): String = ...    // fetch from database
+def lastName(id: Int): String = ...
+
+def fullName(id: Int): String = {
+  val fname = firstName(id)
+  if (fname != null) {
+    val lname = lastName(id)
+    if (lname != null)
+      fname + " " + lname
+    else
+      null
+  } else {
+    null
+  }
+}</code></pre>
+<p>A fairly common pattern. We have two functions (firstName and lastName) which are responsible for producing some data which may or may not be available.
+    If the data is available, then it is returned. Otherwise, the result of these functions will be <strong>null</strong>.
+<p>To use it it looks like the best and safest thing I can do is check fot the nulls.</p>
+</section>
+
+<section class="slide">
+    <h3>look close and you can see the mondad pattern</h3>
+    <p>If I wrap it in Thing...</p>
+<pre><code>def firstName(id: Int): Thing[String] = ...    // fetch from database
+def lastName(id: Int): Thing[String] = ...
+
+def fullName(id: Int): Thing[String] = {
+  firstName(id) bind { fname =>
+    if (fname != null) {
+      lastName(id) bind { lname =>
+        if (lname != null)
+          Thing(fname + " " + lname)
+        else
+          Thing(null)
+      }
+    } else {
+      Thing(null)
+    }
+  }
+}</code></pre>
+<p>See it?</p>
+</section>
+
+<section class="slide">
+
+     <h2>why not move that if null logic into bind?</h2>
+    <h3>meet Option, again...</h3>
+
+<pre><code>sealed trait Option[+A] {
+  def bind[B](f: A => Option[B]): Option[B]
+}
+
+case class Some[+A](value: A) extends Option[A] {
+  def bind[B](f: A => Option[B]) = f(value)
+}
+
+case object None extends Option[Nothing] {
+  def bind[B](f: Nothing => Option[B]) = None
+}</code></pre>
+<p>Option has two different instantiations: Some, which contains a value, and None, which doesn’t contain a value.</p>
+    <p>Think of None as being just an easier way of writing Thing(null).</p>
+
+<p>What’s interesting is that Some and None need to have two different definitions of bind.</p>
+    <h3>How does that help?</h3>
+</section>
+
+<section class="slide" id="model">
+	<h2>No More Null checks!</h2>
+    <pre><code>
+def firstName(id: Int): Option[String] = ...    // fetch from database
+def lastName(id: Int): Option[String] = ...
+
+def fullName(id: Int): Option[String] = {
+  firstName(id) bind { fname =>
+    lastName(id) bind { lname =>
+      Some(fname + " " + lname)
+    }
+  }
+}</code></pre>
+</section>
+
+<section class="slide">
+    <h2>List is another monad.</h2>
+    <h3>It's probably from List that Scala calls 'bind' flatMap()</h3>
+    <p>because the implementation of List's bind is flatten(map(f)</p>
+    <pre><code>def flatMap[B](f: A => Iterable[B]): List[B]</code></pre>
+    The Really interesting part is that that the empty list is dropped when flattening... it wouldn't make sense otherwise
+<pre><code>val x:List[List[Int]] = List(List(1),List(2),Nil,List(4))
+val r1 = x.flatten
+assert(List(1,2,4) == r1)
+println("r1 :=" + r1)
+
+val x1:List[List[Int]] = List(List(1),List(2),List(),List(4))
+val rx1 = x1.flatten
+assert(List(1,2,4) == rx1)
+println("rx1 :=" + rx1)
+
+val y:List[Option[Int]] = List(Some(1),Some(2),None,Some(4))
+val r2 = y.flatten
+println("r2 :=" + r2)
+
+assert(r1 == r2)
+
+//now show flatten is flatmap with id or flatmat with Unit
+val z:List[List[Int]] = List(List(1),List(2),Nil,List(4))
+val r3 = z flatMap identity
+println("r3 :=" + r3)
+assert(r1 == r3)</code></pre>
+
+</section>
+
+<section class="slide" id="model">
+	<h2>Test Fixtures</h2>
+    <pre class="slide"><code class="seventyPc">val oneSec = 1
+val oneMin = 60 * oneSec
+val oneHour = 60 * oneMin
+
+val onejiraDay = 8 * oneHour // 8 hours day
+val oneJiraWeek = 5 * onejiraDay // 5 days a week
+
+val oneNormalDay = 24 * oneHour // 8 hours day
+val oneNormalWeek = 7 * oneNormalDay // 5 days a week
+
+val jira_2w_3d_4h_25m_55s = (2 * oneJiraWeek) + (3 * onejiraDay) + (4 * oneHour) + (25 * oneMin) + (55 * oneSec)
+val jira_2w_4h_25m_55s = (2 * oneJiraWeek) + (4 * oneHour) + (25 * oneMin) + (55 * oneSec)</code></pre>
+</section>
+
+<section class="slide" id="unit test">
+	<h2>TimeRepresentation</h2>
+	<p>We need a type that models a time representation, Given an Int of Time it produces a List broken down into units of time suitable for its rendering </p>
+    <p>EG an 8 hour a day 5 days a week simple TimeRepresentation that only shows <code>w d h m s</code></p>
+	<h3>Test Fixtures</h3>
+    <pre class="slide"><code class="seventyPc">val timerep:TimeRepresentation = //... some time rep to be developed
+
+val res1 = timerep.timeUnits(Time(jira_2w_3d_4h_25m_55s))
+val res2 = timerep.timeUnits(Time(jira_2w_4h_25m_55s))
+
+assert(res1 == List(Some(2), Some(3), Some(4), Some(25), Some(55))
+assert(res2 == List(Some(2), None, Some(4), Some(25), Some(55))
+
+assert("2w 3d 4h 25m 55s" == timerep.show(Time(jira_2w_3d_4h_25m_55s)) )
+assert("2w 4h 25m 55s" == timerep.show(Time(jira_2w_4h_25m_55s)) )</code></pre>
+</section>
+
+<section class="slide" id="protoTypeTimeRep">
+    <h2>quick and dirty prototype</h2>
+    <pre><code class="sixtyPc">trait TimeRepresentation {
+  val daysPerWeek: Int
+  val hoursPerDay: Int
+
+  val secsPerMin = 60
+  val minsPerHour = 60
+
+  val oneSec: Int = 1
+  val oneMin = secsPerMin * oneSec
+  val oneHour = minsPerHour * oneMin
+  val oneDay = hoursPerDay * oneHour
+  val oneWeek = daysPerWeek * oneDay
+
+  def timeUnits(t: Time) = List(weeks(t), days(t), hours(t), mins(t), secs(t))
+
+  def weeks(t: Time): Option[Int] = t.seconds / oneWeek match {
+    case x if (x &gt; 0) =&gt; Some(x)
+    case _ =&gt; None
+  }
+
+  def days(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0)) * oneWeek) / oneDay match {
+    case x if (x &gt; 0) =&gt; Some(x)
+    case _ =&gt; None
+  }
+
+  def hours(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0)) * oneDay) / oneHour match {
+    case x if (x &gt; 0) =&gt; Some(x)
+    case _ =&gt; None
+  }
+
+  def mins(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour)) / oneMin match {
+    case x if (x &gt; 0) =&gt; Some(x)
+    case _ =&gt; None
+  }
+
+  def secs(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour) - ((mins(t) getOrElse 0) * oneMin)) / oneSec match {
+    case x if (x &gt; 0) =&gt; Some(x)
+    case _ =&gt; None
+  }
+}
+
+case class Time(val seconds: Int)</code></pre>
+</section>
+
+<section class="slide" id="timeRep-Refactor-1">
+    <h2>factor out the obvious duplication</h2>
+    <pre><code class="sixtyPc">trait TimeRepresentation {
+  val daysPerWeek: Int
+  val hoursPerDay: Int
+
+  val secsPerMin = 60
+  val minsPerHour = 60
+
+  val oneSec: Int = 1
+  val oneMin = secsPerMin * oneSec
+  val oneHour = minsPerHour * oneMin
+  val oneDay = hoursPerDay * oneHour
+  val oneWeek = daysPerWeek * oneDay
+
+  def timeUnits(t: Time) = List(weeks(t), days(t), hours(t), mins(t), secs(t))
+
+  def wrapIntInOption(i: Int): Option[Int] = i match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def weeks(t: Time) = wrapIntInOption(t.seconds / oneWeek)
+
+  def days(t: Time) = wrapIntInOption((t.seconds - ((weeks(t) getOrElse 0)) * oneWeek) / oneDay)
+
+  def hours(t: Time) = wrapIntInOption((t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0)) * oneDay) / oneHour)
+
+  def mins(t: Time) = wrapIntInOption((t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour)) / oneMin)
+
+  def secs(t: Time) = wrapIntInOption((t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour) - ((mins(t) getOrElse 0) * oneMin)) / oneSec)
+}
+
+case class Time(val seconds: Int)</code></pre>
+</section>
+
+<section class="slide" id="timeRep-Refactor-2">
+    <h2>Refactor into a tail recursive function</h2>
+    <p>Given a List of units per step, fold down the list to calculate units at each step</p>
+    <pre><code class="sixtyPc">trait TimeRepresentation {
+  def numUnitsPerStep: List[Int]
+
+  def times(t: Time) = timeUnits(t.seconds, numUnitsPerStep: List[Int])
+
+  def wrapIntInOption(i: Int): Option[Int] = i match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def timeUnits(time: Int, stepPerUnit: List[Int]): List[Option[Int]] = {
+    @scala.annotation.tailrec
+    def timeUnitsHelper(time: Int, stepPerUnits: List[Int], resultSoFar: List[Option[Int]]): List[Option[Int]] = {
+      //fold down the stepPerUnits the multiplying , to get num of timeunits at that place in the list
+      // remove num units of previous recursion the divide the remainder by timeunits at this place then recurse again
+      if (stepPerUnits == List()) {
+        resultSoFar
+      }
+      else {
+        val unitsAtThisOrder = stepPerUnits.foldLeft(1)(_ * _)
+        val numTimeUnitsAtThisLevel = time / unitsAtThisOrder
+        val o: Option[Int] = wrapIntInOption(numTimeUnitsAtThisLevel)
+        val res = o :: resultSoFar
+        val amountToRemoveForNextIt: Int = numTimeUnitsAtThisLevel * unitsAtThisOrder
+        val timeRemaining = (time - amountToRemoveForNextIt)
+        //tail recurse
+        timeUnitsHelper(timeRemaining, stepPerUnits.tail, res)
+      }
+    }
+    //call helper function to actually do the work initialised with empty result
+    timeUnitsHelper(time, stepPerUnit, List()) reverse
+    // NB pass in accumulated value List() is passed in so can tail recurse this call no need to compute value on funtion return
+    // NB Reverse is used as (IDIOM) is quicker to cons a list then revers it than append as list gets larger
+  }
+}
+
+case class Time(val seconds: Int)</code></pre>
+</section>
+
+<section class="slide"><h2>full Solution</h2>
+<pre><code class="sixtyPc">package com.owtelse.ontime.model
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: robertk
+ */
+trait TimeRepresentation {
+  //abstract members
+  def timeUnitNames: List[String]
+  def numUnitsPerStep: List[Int]
+
+  def times(t: Time) = timeUnits(t.seconds, numUnitsPerStep: List[Int])
+
+  /**
+   * Returns The Time representation as a String Each Time Unit will
+   * have the appropriate timeUnitName appended to it and each unit separated from the other by a space.
+   * Time Units with no value are skipped from the representation.
+   *
+   * eg if the Endings are __"w", "d", "h", "m", "s"__
+   * the representation could be like
+   * 2w 3d 2h 5m 55s
+   * or
+   * 2w 2h 3m
+   */
+  def show(t: Time) = timeUnitsBoundToNames(t) mkString (" ")
+
+  def timeUnitsBoundToNames(t: Time) = {
+    val zipped = times(t) zip timeUnitNames
+    for (a <- zipped; r <- a._1 map (_.toString + a._2)) yield r
+  }
+
+  /**
+   * Given an Int representing time, and a List of UnitsPerStep that you care about produces a List[Option[Int]]
+   *
+   */
+  def timeUnits(time: Int, stepPerUnit: List[Int]): List[Option[Int]] = {
+    //fold down the stepPerUnits the multiplying, to get num of timeunits at that place in the list
+    // remove num units of previous recursion the divide the remainder by timeunits at this place then recurse again
+    @scala.annotation.tailrec
+    def timeUnitsHelper(time: Int, stepPerUnits: List[Int], resultSoFar: List[Option[Int]]): List[Option[Int]] = {
+      if (stepPerUnits == List()) {
+        resultSoFar
+      }
+      else {
+        val unitsAtThisOrder = stepPerUnits.foldLeft(1)(_ * _)
+        val numTimeUnitsAtThisLevel = time / unitsAtThisOrder
+        val res = wrapIntInOption(numTimeUnitsAtThisLevel) :: resultSoFar
+        val timeRemaining = (time - (numTimeUnitsAtThisLevel * unitsAtThisOrder))
+        //tail recurse
+        timeUnitsHelper(timeRemaining, stepPerUnits.tail, res)
+      }
+    }
+    //call helper function to actually do the work initialised with empty result
+    timeUnitsHelper(time, stepPerUnit, List()) reverse
+  }
+
+  def wrapIntInOption(i: Int): Option[Int] = i match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+}
+
+
+/**
+ * namespace to stash some useful time reps
+ */
+object TimeReps {
+  val stdJira = simpleRep(List(5, 8, 60, 60, 1))
+  val jiraRepMS = simpleRepMS(List(5, 8, 60, 60, 1000, 1))
+  val normalRep = simpleRep(List(7, 24, 60, 60, 1))
+  val normalRepMS = simpleRepMS(List(7, 24, 60, 60, 1000, 1))
+}
+
+/**
+ *  Relies on the the underlying class implementing times, ie must be mixed in with TimeRepresentation
+ */
+trait SimpleTimeUnitAccessor {
+  this: TimeRepresentation =>
+
+  val timeUnitNames: List[String] = List("w", "d", "h", "m", "s")
+  // TODO this isn't very extensible, to add months years etc I need to change all the List Indicis
+  // TODO and rely on timeUnitNames being the right value
+  def weeks(t: Time): Option[Int] = times(t)(0)
+  def days(t: Time):  Option[Int]  = times(t)(1)
+  def hours(t: Time): Option[Int] = times(t)(2)
+  def mins(t: Time):  Option[Int]  = times(t)(3)
+  def secs(t: Time):  Option[Int]  = times(t)(4)
+}
+
+trait MilisecondTimeUnitAccessor extends SimpleTimeUnitAccessor {
+  this: TimeRepresentation =>
+  override val timeUnitNames: List[String] = List("w", "d", "h", "m", "s", "ms")
+
+  def milisecs(t: Time): Option[Int] = times(t)(5)
+}
+
+// Simple Rep assumes Weeks is highest timeUnit second is smallest and has default timeUnitNames w,d,h,m,s
+case class simpleRep(val numUnitsPerStep: List[Int]) extends TimeRepresentation with SimpleTimeUnitAccessor
+
+case class simpleRepMS(val numUnitsPerStep: List[Int]) extends TimeRepresentation with MilisecondTimeUnitAccessor
+
+case class Time(val seconds: Int)</code></pre></section>
+
+  <!-- Grab CDN jQuery, with a protocol relative URL; fall back to local if offline -->
+  <script src="//ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="../jquery-1.7.min.js"><\/script>')</script>
+
+<!-- Deck Core and extensions -->
+<script src="../core/deck.core.js"></script>
+<script src="../extensions/hash/deck.hash.js"></script>
+<script src="../extensions/menu/deck.menu.js"></script>
+<script src="../extensions/goto/deck.goto.js"></script>
+<script src="../extensions/status/deck.status.js"></script>
+<script src="../extensions/navigation/deck.navigation.js"></script>
+
+<!-- Specific to this page -->
+<script src="introduction.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,44 @@
+trait TimeRepresentation {
+  val daysPerWeek: Int
+  val hoursPerDay: Int
+
+  val secsPerMin = 60
+  val minsPerHour = 60
+
+  val oneSec: Int = 1
+  val oneMin = secsPerMin * oneSec
+  val oneHour = minsPerHour * oneMin
+  val oneDay = hoursPerDay * oneHour
+  val oneWeek = daysPerWeek * oneDay
+
+  def repList(t: Time) = List(weeks(t), days(t), hours(t), mins(t), secs(t))
+
+  def weeks(t: Time): Option[Int] = t.seconds / oneWeek match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def days(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0)) * oneWeek) / oneDay match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def hours(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0)) * oneDay) / oneHour match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def mins(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour)) / oneMin match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+  def secs(t: Time): Option[Int] = (t.seconds - ((weeks(t) getOrElse 0) * oneWeek) - ((days(t) getOrElse 0) * oneDay) - ((hours(t) getOrElse 0) * oneHour) - ((mins(t) getOrElse 0) * oneMin)) / oneSec match {
+    case x if (x > 0) => Some(x)
+    case _ => None
+  }
+
+}
+        </code>
+    </pre>
+</section>

@@ -48,6 +48,30 @@
   font-size: 14px;
 }
 
+.deck-container .fiftyPc {
+  font-size: 0.5em;
+}
+
+.deck-container .sixtyPc {
+  font-size: 0.6em;
+}
+
+.deck-container .seventyPc {
+  font-size: 0.7em;
+}
+
+.slide .vcenter-right-low cite {
+  position: relative;
+  top: auto;
+  padding: 0;
+  -webkit-transform: none;
+  -moz-transform: none;
+  -ms-transform: none;
+  -o-transform: none;
+  transform: none;
+}
+
+
 @media print {
   .theme-menu {
     display: none !important;
